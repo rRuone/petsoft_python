@@ -114,11 +114,16 @@
             <th>Valor do Serviço (R$)</th>
         </tr>
         {% for servico in servicos %}
-            <tr>
-                <td>{{ servico.tipo_servico }}</td>
-                <td>{{ servico.valor_servico }}</td>
-            </tr>
-        {% endfor %}
+        <tr>
+            <td>{{ servico.tipo }}</td>
+            <td>{{ servico.valor }}</td>
+            <td>
+                <form method="POST" action="/editar_servico/{{ servico.id }}">
+                    <button type="submit">Editar</button>
+                </form>
+            </td>
+        </tr>
+{% endfor %}
     </table>
 
     <h2>Adicionar Novo Serviço</h2>
@@ -140,6 +145,7 @@
     {% endif %}
 {% endwith %}
 
+\* rauaobg */
 
 </body>
 </html>

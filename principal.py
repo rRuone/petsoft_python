@@ -5,12 +5,17 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import func
 import re
+from flask import jsonify
+from flask_migrate import Migrate
+
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:senha123@127.0.0.1/petsoft'
 app.config['SECRET_KEY'] = 'chave_secreta'  
 db = SQLAlchemy(app)
 
+migrate = Migrate(app, db)
 
 # Definindo modelos para as tabelas do banco de dados
 class Cliente(db.Model):
@@ -23,11 +28,17 @@ class Animal(db.Model):
     id_an = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nome = db.Column(db.String(80), nullable=False)
     data_nasc = db.Column(db.Date)
-    Cliente_idCliente = db.Column(db.Integer, db.ForeignKey('cliente.idCliente'), nullable=False)
-    pelagem = db.Column(db.String(1))
-    porte = db.Column(db.String(1))
+    pelagem = db.Column(db.String(5))
+    porte = db.Column(db.String(3))
     agressivo = db.Column(db.Boolean)
     obs = db.Column(db.String(100))
+
+    # Chave estrangeira referenciando a tabela Cliente
+    Cliente_idCliente = db.Column(db.Integer, db.ForeignKey('cliente.idCliente'), nullable=False)
+
+    # Relacionamento com o Cliente
+    cliente = db.relationship('Cliente', backref=db.backref('animais', lazy=True))
+
 
 class Usuario(db.Model):
     id_us = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -92,10 +103,49 @@ def listar_clientes():
         return redirect(url_for('listar_clientes'))
 
 
-@app.route('/animais')
+# Alteração na rota /animais para passar a lista de clientes para o template
+@app.route('/animais', methods=['GET', 'POST'])
 def listar_animais():
+    if request.method == 'POST':
+        # Obter os dados do formulário
+        nome_animal = request.form.get('nome_animal')
+        cliente_id = request.form.get('cliente_animal')
+
+        # Verificar se o nome do animal não contém números
+        if any(char.isdigit() for char in nome_animal):
+            flash('O nome do animal não pode conter números.', 'error')
+            return redirect(url_for('listar_animais'))
+
+        # Verificar se o cliente existe
+        cliente = Cliente.query.get(cliente_id)
+        if cliente is None:
+            flash('Cliente não encontrado.', 'error')
+            return redirect(url_for('listar_animais'))
+
+        # Verificar se o animal já tem um dono
+        if Animal.query.filter_by(nome=nome_animal).first():
+            flash('Já existe um animal com esse nome.', 'error')
+            return redirect(url_for('listar_animais'))
+
+        # Se todas as verificações passarem, criar o novo animal
+        novo_animal = Animal(
+            nome=nome_animal,
+            data_nasc=datetime.now(),
+            Cliente_idCliente=cliente_id
+            # Adicione os outros campos do formulário conforme necessário
+        )
+
+        db.session.add(novo_animal)
+        db.session.commit()
+
+        flash('Animal adicionado com sucesso.', 'success')
+        return redirect(url_for('listar_animais'))
+
+    # Se for uma solicitação GET, continue com a lógica de listagem de animais
     animais = Animal.query.all()
-    return render_template('animais.html', animais=animais)
+    clientes = Cliente.query.all()
+    return render_template('animais.html', animais=animais, clientes=clientes)
+
 
 @app.route('/agendamento')
 def listar_agendamento():
@@ -161,13 +211,13 @@ def before_request():
             return redirect(url_for('login', next=request.endpoint))
 
 
-#if __name__ == '__main__':
-    # with app.app_context():
-    #     db.create_all()
-    # app.run(debug=True)
+if __name__ == '__main__':
+    #with app.app_context():
+       # db.create_all()
+    app.run(debug=True)
 
 
-    # Apaga o banco e recomeça
-with app.app_context():
-    db.drop_all()
-    db.create_all()
+#     # Apaga o banco e recomeça
+# with app.app_context():
+#     db.drop_all()
+#     db.create_all()

@@ -4,8 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animais</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            margin: 0;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            background-color: #555;
+            overflow: hidden;
+        }
+
+        li {
+            float: right;
+        }
+
+        li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        li a:hover {
+            background-color: #4CAF50;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
+    <h1>Petsoft</h1>
+    <ul>
+        <li><a href="/clientes">Clientes</a></li>
+        <li><a href="/animais">Animais</a></li>
+        <li><a href="/agendamento">Agendamento</a></li>
+        <li><a href="/servicos">Serviços</a></li>
+        <li><a href="/index">Início</a></li>
+    </ul>
+
+
+
     <h1>Lista de Animais</h1>
     <ul>
         {% for animal in animais %}
@@ -14,10 +99,84 @@
     </ul>
 
     <h2>Adicionar Novo Animal</h2>
-    <form method="POST" action="/animais">
+    <form method="POST" action="/animais" onsubmit="return validateForm()">
+        <label for="cliente_animal">Cliente:</label>
+        <select id="cliente_animal" name="cliente_animal" required>
+            {% for cliente in clientes %}
+                <option value="{{ cliente.idCliente }}">{{ cliente.nome }}</option>
+            {% endfor %}
+        </select>
+    
+
         <label for="nome_animal">Nome do Animal:</label>
         <input type="text" id="nome_animal" name="nome_animal" required>
+
+        <label for="data_nasc_animal">Data de Nascimento:</label>
+        <input type="date" id="data_nasc_animal" name="data_nasc_animal" required>
+
+        <label for="agressivo_animal">Agressivo:</label>
+        <select id="agressivo_animal" name="agressivo_animal">
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
+        </select>
+
+        <label for="porte_animal">Porte:</label>
+        <select id="porte_animal" name="porte_animal">
+            <option value="P">Pequeno</option>
+            <option value="M">Médio</option>
+            <option value="G">Grande</option>
+        </select>
+
+        <label for="pelagem_animal">Tipo de Pelagem:</label>
+        <select id="pelagem_animal" name="pelagem_animal" required>
+            <option value="curta">Pelagem Curta</option>
+            <option value="longa">Pelagem Longa</option>
+            <option value="encaracolada">Pelagem Encaracolada</option>
+            <option value="dupla">Pelagem Dupla</option>
+            <option value="longa_e_curta">Pelagem Longa e Curta</option>
+        </select>
+
+        <label for="observacoes_animal">Observações:</label>
+        <textarea id="observacoes_animal" name="observacoes_animal" rows="4" cols="50"></textarea>
+
         <button type="submit">Adicionar Animal</button>
     </form>
+
+    <script>
+        function showAlert(message) {
+            alert(message);
+        }
+
+        function validateForm() {
+            var nomeAnimalInput = document.getElementById("nome_animal");
+            var dataNascAnimalInput = document.getElementById("data_nasc_animal");
+            var agressivoAnimalInput = document.getElementById("agressivo_animal");
+            var porteAnimalInput = document.getElementById("porte_animal");
+            var pelagemAnimalInput = document.getElementById("pelagem_animal");
+            var clienteAnimalInput = document.getElementById("cliente_animal");
+
+            // Client-side validation
+            if (!/^[A-Za-zÀ-ú ]+$/.test(nomeAnimalInput.value)) {
+                showAlert('O nome do animal deve conter apenas letras e espaços.');
+                return false;
+            }
+
+            if (!dataNascAnimalInput.checkValidity()) {
+                showAlert('Informe uma data de nascimento válida.');
+                return false;
+            }
+
+            if (!pelagemAnimalInput.value.trim()) {
+                showAlert('A pelagem do animal é obrigatória.');
+                return false;
+            }
+
+            if (clienteAnimalInput.value === "") {
+                showAlert('Selecione um cliente.');
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>
